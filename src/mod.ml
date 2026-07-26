@@ -160,6 +160,25 @@ let exe =
   | _ -> ""
   end
 
+let command_path p =
+  begin match Res.get_bin p with
+  | Some path -> path
+  | None -> p ^ exe
+  end
+
+let in_dir dir f =
+  let cwd = Sys.getcwd () in
+  Unix.chdir dir;
+  begin try
+    let result = f () in
+    Unix.chdir cwd;
+    result
+  with
+  | exn ->
+      Unix.chdir cwd;
+      raise exn
+  end
+
 let need x =
   Res.get_bin x <> None
 
@@ -178,14 +197,15 @@ let dump (tmp, lib, prg, err) x =
 let exec (tmp, lib, prg, err) p pl =
   let pl = List.map subst pl in
   let r, w = Unix.pipe () in
-  let bin = p ^ exe in
+  let bin = command_path p in
   log#debug 1 (
     F.x "execution of <command>..." [
       "command", F.string bin;
     ]);
   let pid =
-    Unix.chdir tmp;
-    Unix.create_process bin (Array.of_list (p :: pl)) Unix.stdin w w
+    in_dir tmp (fun () ->
+      Unix.create_process bin (Array.of_list (p :: pl)) Unix.stdin w w
+    )
   in
   let status =
     begin match snd (Unix.waitpid [] pid) with
@@ -287,10 +307,13 @@ let make name : t =
 	    | true ->
 		let path = Res.path [tmp; p] in
 		begin match Sys.os_type with
-		| "Win32" -> Unix.rename path (path ^ exe); path ^ exe
+		| "Win32" ->
+		    let path_exe = path ^ exe in
+		    if Sys.file_exists path_exe then path_exe
+		    else begin Unix.rename path path_exe; path_exe end
 		| _ -> path
 		end
-	    | false -> p ^ exe
+	    | false -> command_path p
 	    end
 	  in
 	  let out_ch', out_ch = Unix.pipe () in
@@ -301,9 +324,10 @@ let make name : t =
 	      "command", F.string bin;
 	    ]);
 	  let pid =
-	    Unix.chdir tmp;
 	    let args = Array.of_list (p :: pl) in
-	    Unix.create_process bin args out_ch' in_ch' err_ch'
+	    in_dir tmp (fun () ->
+	      Unix.create_process bin args out_ch' in_ch' err_ch'
+	    )
 	  in
 	  Unix.close in_ch'; Unix.close out_ch'; Unix.close err_ch';
 	  let close () =

@@ -1,0 +1,7 @@
+(include_subdirs unqualified)
+
+(executable
+ (name laby)
+ (libraries unix str threads lablgtk3 lablgtk3-sourceview3)
+ (flags (:standard -thread))
+ (link_flags (:standard -thread)))

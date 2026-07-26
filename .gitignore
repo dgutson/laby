@@ -1,4 +1,6 @@
 _build-*
-laby*
-src/config.ml
+/_build/
+/dist/
+/laby
+/laby.exe
 

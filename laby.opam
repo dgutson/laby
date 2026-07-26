@@ -1,0 +1,23 @@
+opam-version: "2.0"
+synopsis: "Learn programming by guiding an ant through labyrinths"
+description: """
+Laby is a small GTK application for learning programming by guiding an ant
+through a labyrinth while avoiding spider webs and moving rocks.
+"""
+maintainer: "Daniel Gutson"
+authors: ["The Laby team"]
+license: "GPL-3.0-or-later"
+homepage: "https://github.com/dgutson/laby"
+bug-reports: "https://github.com/dgutson/laby/issues"
+dev-repo: "git+https://github.com/dgutson/laby.git"
+
+depends: [
+  "ocaml" {>= "4.13"}
+  "dune" {>= "3.0"}
+  "lablgtk3" {>= "3.1.0"}
+  "lablgtk3-sourceview3" {>= "3.1.0"}
+]
+
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]

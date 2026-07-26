@@ -1,0 +1,54 @@
+name: Native Windows
+
+on:
+  push:
+    branches:
+      - master
+      - windows-native
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up native OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "4.14"
+          windows-compiler: mingw
+          windows-environment: msys2
+
+      - name: Install dependencies
+        run: opam install . --deps-only --yes
+
+      - name: Build native executable
+        shell: pwsh
+        run: .\build-windows.ps1 -SkipDependencies
+
+      - name: Verify build layout
+        shell: pwsh
+        run: |
+          if (-not (Test-Path .\dist\windows\laby.exe)) {
+            throw "Missing dist\windows\laby.exe"
+          }
+          if (-not (Test-Path .\dist\windows\data\levels\0.laby)) {
+            throw "Missing runtime data"
+          }
+
+      - name: Smoke-test executable and resource lookup
+        shell: pwsh
+        run: |
+          Push-Location .\dist\windows
+          try {
+            opam exec -- .\laby.exe --version
+          }
+          finally {
+            Pop-Location
+          }

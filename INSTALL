@@ -18,13 +18,18 @@ Linux or Unix-like:
 
 Windows:
 
-  The best advice is to use pre-compiled binaries available on the web:
-    http://cl-informatik.uibk.ac.at/users/sgimenez/data/fdls/windows/
-  Those binaries are cross-compiled using mingw-ocaml.
-  If you plan to compile them by yourself on windows, you will
-  probably need patience and a lot of good luck and the following
-  software:
+  Native 64-bit Windows builds use opam 2.2 or newer with MinGW.
 
-    - ocaml: http://caml.inria.fr/download.en.html
-    - lablgtk: http://wwwfun.kurims.kyoto-u.ac.jp/soft/olabl/lablgtk.html
-    - gtksourceview: http://projects.gnome.org/gtksourceview/download.html
+  Install Git and opam from PowerShell:
+
+    winget install Git.Git OCaml.opam
+    opam init
+
+  Then create or select an OCaml 4.14 switch and build:
+
+    opam switch create . 4.14.2
+    .\build-windows.ps1
+    .\run-windows.ps1
+
+  See README.md for details. The launcher runs through "opam exec" so
+  the GTK3 and GtkSourceView3 runtime DLLs are available on PATH.

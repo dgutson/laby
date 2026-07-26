@@ -1,12 +1,12 @@
 (*
-   Copyright (C) 2007-2010 Stéphane Gimenez
+   Copyright (C) 2007-2010 St?phane Gimenez
    You have permission to copy, modify, and redistribute under the
    terms of the GPL-3.0. For full license terms, see gpl-3.0.txt.
 *)
 
 (**
    ocaml-dtools
-   @author Stéphane Gimenez
+   @author St?phane Gimenez
 *)
 
 let log = Log.make ["res"]
@@ -69,6 +69,12 @@ let check_file f =
       false
   end
 
+let absolute_path p =
+  if Filename.is_relative p then Filename.concat (Sys.getcwd ()) p else p
+
+let executable_dir =
+  Filename.dirname (absolute_path Sys.executable_name)
+
 let init_dir =
   Sys.getcwd ()
 
@@ -80,7 +86,7 @@ let data_dirs () =
   let sys_data_dirs =
     begin match Sys.os_type with
     | "Unix" | "Cygwin" -> [path [!sys_data_dir; domain]]
-    | "Win32" -> [path [init_dir; "data"]]
+    | "Win32" -> [path [executable_dir; "data"]; path [init_dir; "data"]]
     | _ -> assert false
     end
   in
