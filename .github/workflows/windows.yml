@@ -65,7 +65,7 @@ jobs:
               if ($LASTEXITCODE -ne 0) {
                 throw "Could not inspect the bundled Pixbuf loaders"
               }
-              if ($loaders -notmatch "svg") {
+              if (($loaders -join "`n") -notmatch "svg") {
                 throw "The standalone package is missing its SVG loader"
               }
             }
