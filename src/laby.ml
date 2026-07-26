@@ -5,6 +5,49 @@
  * terms of the GPL-3.0. For full license terms, see gpl-3.0.txt.
  *)
 
+let configure_windows_runtime () =
+  if Sys.os_type = "Win32" then begin
+    let executable =
+      if Filename.is_relative Sys.executable_name then
+        Filename.concat (Sys.getcwd ()) Sys.executable_name
+      else
+        Sys.executable_name
+    in
+    let root = Filename.dirname executable in
+    let share = Filename.concat root "share" in
+    let loaders =
+      Filename.concat root
+        (Filename.concat "lib"
+           (Filename.concat "gdk-pixbuf-2.0" "loaders"))
+    in
+    let fonts =
+      Filename.concat root
+        (Filename.concat "etc" (Filename.concat "fonts" "fonts.conf"))
+    in
+    Unix.putenv "GDK_PIXBUF_MODULEDIR" loaders;
+    Unix.putenv "GTK_DATA_PREFIX" root;
+    Unix.putenv "GTK_EXE_PREFIX" root;
+    Unix.putenv "XDG_DATA_DIRS" share;
+    if Sys.file_exists fonts then Unix.putenv "FONTCONFIG_FILE" fonts;
+
+    let query = Filename.concat root "gdk-pixbuf-query-loaders.exe" in
+    if Sys.file_exists query then begin
+      let cache_root =
+        match Sys.getenv_opt "LOCALAPPDATA" with
+        | Some dir -> Filename.concat dir "Laby"
+        | None -> root
+      in
+      if not (Sys.file_exists cache_root) then
+        (try Unix.mkdir cache_root 0o755 with Unix.Unix_error _ -> ());
+      let cache = Filename.concat cache_root "loaders.cache" in
+      let command = Printf.sprintf "\"%s\" > \"%s\"" query cache in
+      if Sys.command command = 0 && Sys.file_exists cache then
+        Unix.putenv "GDK_PIXBUF_MODULE_FILE" cache
+    end
+  end
+
+let () = configure_windows_runtime ()
+
 let conf =
   Conf.void
     ~l:[
