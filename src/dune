@@ -3,5 +3,5 @@
 (executable
  (name laby)
  (libraries unix str threads lablgtk3 lablgtk3-sourceview3)
- (flags (:standard -thread))
+ (flags (:standard -thread -warn-error -A))
  (link_flags (:standard -thread)))
