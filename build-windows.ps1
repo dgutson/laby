@@ -40,14 +40,20 @@ function Copy-RuntimeDependencyClosure {
         [string[]]$InitialFiles
     )
 
-    $Objdump = Get-Command "objdump.exe" -ErrorAction SilentlyContinue
-    if (-not $Objdump) {
+    $ObjdumpCommand = Get-Command "objdump.exe" -ErrorAction SilentlyContinue
+    $ObjdumpPath = if ($ObjdumpCommand) {
+        $ObjdumpCommand.Source
+    }
+    else {
+        $null
+    }
+    if (-not $ObjdumpPath) {
         $Fallback = "C:\msys64\mingw64\bin\objdump.exe"
         if (Test-Path -LiteralPath $Fallback -PathType Leaf) {
-            $Objdump = Get-Item -LiteralPath $Fallback
+            $ObjdumpPath = $Fallback
         }
     }
-    if (-not $Objdump) {
+    if (-not $ObjdumpPath) {
         throw "objdump.exe was not found; cannot collect runtime DLLs"
     }
 
@@ -86,7 +92,7 @@ function Copy-RuntimeDependencyClosure {
             continue
         }
 
-        $Headers = & $Objdump.Source -p $File 2>&1
+        $Headers = & $ObjdumpPath -p $File 2>&1
         if ($LASTEXITCODE -ne 0) {
             throw "objdump failed while inspecting $File"
         }
@@ -174,14 +180,31 @@ try {
     }
     Copy-Item -LiteralPath $QueryLoaders -Destination $DistDir
 
-    $PkgConfig = Get-Command "pkg-config.exe" -ErrorAction SilentlyContinue
-    if (-not $PkgConfig) {
-        $PkgConfig = Get-Command "pkgconf.exe" -ErrorAction SilentlyContinue
+    $PkgConfigPath = $null
+    foreach ($Candidate in @(
+        "C:\msys64\mingw64\bin\pkg-config.exe",
+        "C:\msys64\mingw64\bin\pkgconf.exe",
+        "C:\msys64\usr\bin\pkg-config.exe",
+        "C:\msys64\usr\bin\pkgconf.exe"
+    )) {
+        if (Test-Path -LiteralPath $Candidate -PathType Leaf) {
+            $PkgConfigPath = $Candidate
+            break
+        }
     }
-    if (-not $PkgConfig) {
+    if (-not $PkgConfigPath) {
+        foreach ($Name in @("pkg-config.exe", "pkgconf.exe")) {
+            $Command = Get-Command $Name -ErrorAction SilentlyContinue
+            if ($Command) {
+                $PkgConfigPath = $Command.Source
+                break
+            }
+        }
+    }
+    if (-not $PkgConfigPath) {
         throw "pkg-config.exe was not found"
     }
-    $LoaderSource = (& $PkgConfig.Source `
+    $LoaderSource = (& $PkgConfigPath `
         --variable=gdk_pixbuf_moduledir gdk-pixbuf-2.0).Trim()
     if ($LASTEXITCODE -ne 0 -or
         -not (Test-Path -LiteralPath $LoaderSource -PathType Container)) {
