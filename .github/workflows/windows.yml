@@ -55,3 +55,11 @@ jobs:
           finally {
             Pop-Location
           }
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: laby-windows-x64
+          path: dist/windows
+          if-no-files-found: error
+          retention-days: 30
