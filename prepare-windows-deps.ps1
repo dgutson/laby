@@ -10,6 +10,7 @@ $ProjectRoot = $PSScriptRoot
 $SourceRoot = Join-Path $ProjectRoot ".opam-src"
 $SourceDir = Join-Path $SourceRoot "lablgtk3-$LablgtkVersion"
 $PixbufSource = Join-Path $SourceDir "src\ml_gdkpixbuf.c"
+$OpamFile = Join-Path $SourceDir "lablgtk3.opam"
 
 function Invoke-Checked {
     param(
@@ -41,8 +42,9 @@ Invoke-Checked -Command "opam" -Arguments @(
     "--dir=$SourceDir"
 )
 
-if (-not (Test-Path -LiteralPath $PixbufSource -PathType Leaf)) {
-    throw "lablgtk3 source is missing $PixbufSource"
+if (-not (Test-Path -LiteralPath $PixbufSource -PathType Leaf) -or
+    -not (Test-Path -LiteralPath $OpamFile -PathType Leaf)) {
+    throw "The downloaded lablgtk3 source is incomplete"
 }
 
 $Source = [IO.File]::ReadAllText($PixbufSource)
@@ -67,6 +69,21 @@ $Patched = $Source.Replace($OldSerialize, $NewSerialize).Replace(
     [Text.UTF8Encoding]::new($false)
 )
 
+$OpamSource = [IO.File]::ReadAllText($OpamFile)
+$OpamPatched = [Text.RegularExpressions.Regex]::Replace(
+    $OpamSource,
+    '(?m)^\s*"(?:ocamlfind|camlp5)"\s*\{\s*dev\s*\}\s*\r?\n',
+    ""
+)
+if ($OpamPatched -eq $OpamSource) {
+    throw "The expected lablgtk3 development-only dependencies were not found"
+}
+[IO.File]::WriteAllText(
+    $OpamFile,
+    $OpamPatched,
+    [Text.UTF8Encoding]::new($false)
+)
+
 Invoke-Checked -Command "opam" -Arguments @(
     "pin",
     "add",
@@ -76,4 +93,4 @@ Invoke-Checked -Command "opam" -Arguments @(
     "--yes"
 )
 
-Write-Host "Pinned lablgtk3 $LablgtkVersion with its Win64 serializer fix."
+Write-Host "Pinned lablgtk3 $LablgtkVersion with its Win64 build fixes."

@@ -39,6 +39,8 @@ under `dist\windows`.
 wrong integer width on 64-bit Windows. `prepare-windows-deps.ps1`
 downloads that release, applies the two-type compatibility fix, and pins
 the corrected source in the active switch before the dependency build.
+The pin excludes upstream's development-only parser generators because
+release archives already contain their generated files.
 The workaround can be removed after the fix is released upstream.
 
 The launcher uses `opam exec` because GTK and GtkSourceView DLLs are
