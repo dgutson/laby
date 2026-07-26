@@ -36,9 +36,10 @@ compiles a native `laby.exe`, and places the executable and runtime data
 under `dist\windows`.
 
 `lablgtk3` 3.1.5 has two GdkPixbuf serializer signatures that use the
-wrong integer width on 64-bit Windows. `prepare-windows-deps.ps1`
-downloads that release, applies the two-type compatibility fix, and pins
-the corrected source in the active switch before the dependency build.
+wrong integer width on 64-bit Windows, and its property generator
+misinterprets Dune's Windows input paths. `prepare-windows-deps.ps1`
+downloads that release, applies these compatibility fixes, and pins the
+corrected source in the active switch before the dependency build.
 The pin excludes upstream's development-only parser generators because
 release archives already contain their generated files.
 The workaround can be removed after the fix is released upstream.

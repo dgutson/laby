@@ -10,6 +10,7 @@ $ProjectRoot = $PSScriptRoot
 $SourceRoot = Join-Path $ProjectRoot ".opam-src"
 $SourceDir = Join-Path $SourceRoot "lablgtk3-$LablgtkVersion"
 $PixbufSource = Join-Path $SourceDir "src\ml_gdkpixbuf.c"
+$PropccSource = Join-Path $SourceDir "tools\propcc.ml"
 $OpamFile = Join-Path $SourceDir "lablgtk3.opam"
 
 function Invoke-Checked {
@@ -43,6 +44,7 @@ Invoke-Checked -Command "opam" -Arguments @(
 )
 
 if (-not (Test-Path -LiteralPath $PixbufSource -PathType Leaf) -or
+    -not (Test-Path -LiteralPath $PropccSource -PathType Leaf) -or
     -not (Test-Path -LiteralPath $OpamFile -PathType Leaf)) {
     throw "The downloaded lablgtk3 source is incomplete"
 }
@@ -66,6 +68,18 @@ $Patched = $Source.Replace($OldSerialize, $NewSerialize).Replace(
 [IO.File]::WriteAllText(
     $PixbufSource,
     $Patched,
+    [Text.UTF8Encoding]::new($false)
+)
+
+$Propcc = [IO.File]::ReadAllText($PropccSource)
+$OldBase = "let base = Filename.chop_extension f in"
+$NewBase = "let base = Filename.chop_extension (Filename.basename f) in"
+if (-not $Propcc.Contains($OldBase)) {
+    throw "The expected lablgtk3 propcc path expression was not found"
+}
+[IO.File]::WriteAllText(
+    $PropccSource,
+    $Propcc.Replace($OldBase, $NewBase),
     [Text.UTF8Encoding]::new($false)
 )
 
