@@ -107,4 +107,13 @@ Invoke-Checked -Command "opam" -Arguments @(
     "--yes"
 )
 
-Write-Host "Pinned lablgtk3 $LablgtkVersion with its Win64 build fixes."
+Invoke-Checked -Command "opam" -Arguments @(
+    "pin",
+    "add",
+    "lablgtk3-sourceview3.$LablgtkVersion",
+    $SourceDir,
+    "--no-action",
+    "--yes"
+)
+
+Write-Host "Pinned lablgtk3 packages $LablgtkVersion with their Win64 build fixes."
