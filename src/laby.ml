@@ -41,12 +41,19 @@ let configure_windows_runtime () =
         (try Unix.mkdir cache_root 0o755 with Unix.Unix_error _ -> ());
       let cache = Filename.concat cache_root "loaders.cache" in
       (try
+         let loader_files =
+           Sys.readdir loaders
+           |> Array.to_list
+           |> List.filter (fun name -> Filename.check_suffix name ".dll")
+           |> List.map (Filename.concat loaders)
+         in
          let output =
            Unix.openfile cache
              [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o644
          in
+         let arguments = Array.of_list (query :: loader_files) in
          let pid =
-           Unix.create_process query [|query|]
+           Unix.create_process query arguments
              Unix.stdin output Unix.stderr
          in
          Unix.close output;
@@ -54,7 +61,7 @@ let configure_windows_runtime () =
          | _, Unix.WEXITED 0 when Sys.file_exists cache ->
              Unix.putenv "GDK_PIXBUF_MODULE_FILE" cache
          | _ -> ()
-       with Unix.Unix_error _ -> ())
+       with Unix.Unix_error _ | Sys_error _ -> ())
     end
   end
 
