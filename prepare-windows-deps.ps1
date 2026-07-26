@@ -32,6 +32,13 @@ if (-not (Get-Command opam -ErrorAction SilentlyContinue)) {
     throw "opam was not found. Install it with: winget install OCaml.opam"
 }
 
+$Pacman = "C:\msys64\usr\bin\pacman.exe"
+if (Test-Path -LiteralPath $Pacman -PathType Leaf) {
+    Invoke-Checked -Command $Pacman -Arguments @(
+        "-S", "--noconfirm", "--needed", "mingw-w64-x86_64-librsvg"
+    )
+}
+
 if (Test-Path -LiteralPath $SourceDir) {
     Remove-Item -LiteralPath $SourceDir -Recurse -Force
 }
