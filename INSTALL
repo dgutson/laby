@@ -31,5 +31,8 @@ Windows:
     .\build-windows.ps1
     .\run-windows.ps1
 
+  The build script pins a locally patched lablgtk3 3.1.5 because that
+  release uses Unix-sized serializer types that do not compile on Win64.
+
   See README.md for details. The launcher runs through "opam exec" so
   the GTK3 and GtkSourceView3 runtime DLLs are available on PATH.

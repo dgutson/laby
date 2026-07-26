@@ -26,7 +26,10 @@ jobs:
           windows-environment: msys2
 
       - name: Install dependencies
-        run: opam install . --deps-only --yes
+        shell: pwsh
+        run: |
+          .\prepare-windows-deps.ps1
+          opam install . --deps-only --yes
 
       - name: Build native executable
         shell: pwsh

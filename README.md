@@ -35,6 +35,12 @@ The build installs the OCaml dependencies into the active opam switch,
 compiles a native `laby.exe`, and places the executable and runtime data
 under `dist\windows`.
 
+`lablgtk3` 3.1.5 has two GdkPixbuf serializer signatures that use the
+wrong integer width on 64-bit Windows. `prepare-windows-deps.ps1`
+downloads that release, applies the two-type compatibility fix, and pins
+the corrected source in the active switch before the dependency build.
+The workaround can be removed after the fix is released upstream.
+
 The launcher uses `opam exec` because GTK and GtkSourceView DLLs are
 provided by the opam-managed MinGW environment. A future packaging step
 can collect those DLLs into a standalone ZIP or installer.

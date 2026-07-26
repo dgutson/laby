@@ -37,6 +37,11 @@ try {
     }
 
     if (-not $SkipDependencies) {
+        & (Join-Path $ProjectRoot "prepare-windows-deps.ps1")
+        if ($LASTEXITCODE -ne 0) {
+            throw "prepare-windows-deps.ps1 exited with code $LASTEXITCODE"
+        }
+
         Invoke-Checked -Command "opam" -Arguments @(
             "install", ".", "--deps-only", "--yes"
         )
