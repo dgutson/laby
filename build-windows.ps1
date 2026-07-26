@@ -102,6 +102,11 @@ function Copy-RuntimeDependencyClosure {
                 continue
             }
             $Name = $Matches.Name
+            $SystemDll = Join-Path $env:SystemRoot "System32\$Name"
+            if (Test-Path -LiteralPath $SystemDll -PathType Leaf) {
+                Write-Verbose "Using Windows system DLL: $Name"
+                continue
+            }
             if (-not $ResolvedDlls.Add($Name)) {
                 continue
             }
