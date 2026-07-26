@@ -50,7 +50,21 @@ jobs:
         run: |
           Push-Location .\dist\windows
           try {
-            opam exec -- .\laby.exe --version
+            $originalPath = $env:PATH
+            $env:PATH = "$PWD;$env:SystemRoot;$env:SystemRoot\System32"
+            $env:CAML_LD_LIBRARY_PATH = ""
+            try {
+              .\laby.exe --version
+              $env:GDK_PIXBUF_MODULEDIR =
+                "$PWD\lib\gdk-pixbuf-2.0\loaders"
+              $loaders = .\gdk-pixbuf-query-loaders.exe
+              if ($loaders -notmatch "svg") {
+                throw "The standalone package is missing its SVG loader"
+              }
+            }
+            finally {
+              $env:PATH = $originalPath
+            }
           }
           finally {
             Pop-Location
