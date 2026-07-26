@@ -30,39 +30,13 @@ let configure_windows_runtime () =
     Unix.putenv "XDG_DATA_DIRS" share;
     if Sys.file_exists fonts then Unix.putenv "FONTCONFIG_FILE" fonts;
 
-    let query = Filename.concat root "gdk-pixbuf-query-loaders.exe" in
-    if Sys.file_exists query then begin
-      let cache_root =
-        match Sys.getenv_opt "LOCALAPPDATA" with
-        | Some dir -> Filename.concat dir "Laby"
-        | None -> root
-      in
-      if not (Sys.file_exists cache_root) then
-        (try Unix.mkdir cache_root 0o755 with Unix.Unix_error _ -> ());
-      let cache = Filename.concat cache_root "loaders.cache" in
-      (try
-         let loader_files =
-           Sys.readdir loaders
-           |> Array.to_list
-           |> List.filter (fun name -> Filename.check_suffix name ".dll")
-           |> List.map (Filename.concat loaders)
-         in
-         let output =
-           Unix.openfile cache
-             [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o644
-         in
-         let arguments = Array.of_list (query :: loader_files) in
-         let pid =
-           Unix.create_process query arguments
-             Unix.stdin output Unix.stderr
-         in
-         Unix.close output;
-         match Unix.waitpid [] pid with
-         | _, Unix.WEXITED 0 when Sys.file_exists cache ->
-             Unix.putenv "GDK_PIXBUF_MODULE_FILE" cache
-         | _ -> ()
-       with Unix.Unix_error _ | Sys_error _ -> ())
-    end
+    let cache =
+      Filename.concat root
+        (Filename.concat "lib"
+           (Filename.concat "gdk-pixbuf-2.0" "loaders.cache"))
+    in
+    if Sys.file_exists cache then
+      Unix.putenv "GDK_PIXBUF_MODULE_FILE" cache
   end
 
 let () = configure_windows_runtime ()
