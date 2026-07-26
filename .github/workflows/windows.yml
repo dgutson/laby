@@ -57,7 +57,14 @@ jobs:
               .\laby.exe --version
               $env:GDK_PIXBUF_MODULEDIR =
                 "$PWD\lib\gdk-pixbuf-2.0\loaders"
-              $loaders = .\gdk-pixbuf-query-loaders.exe
+              $loaderFiles = Get-ChildItem `
+                -LiteralPath $env:GDK_PIXBUF_MODULEDIR `
+                -Filter "*.dll" -File |
+                Select-Object -ExpandProperty FullName
+              $loaders = & .\gdk-pixbuf-query-loaders.exe @loaderFiles
+              if ($LASTEXITCODE -ne 0) {
+                throw "Could not inspect the bundled Pixbuf loaders"
+              }
               if ($loaders -notmatch "svg") {
                 throw "The standalone package is missing its SVG loader"
               }
