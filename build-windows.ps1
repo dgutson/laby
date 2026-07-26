@@ -223,6 +223,28 @@ try {
         -Filter "*.dll" -File | Select-Object -ExpandProperty FullName
     Copy-RuntimeDependencyClosure -InitialFiles $RuntimeFiles
 
+    $LoaderCache = Join-Path $DistDir "lib\gdk-pixbuf-2.0\loaders.cache"
+    $RelativeLoaderFiles = Get-ChildItem -LiteralPath $LoaderDestination `
+        -Filter "*.dll" -File | ForEach-Object {
+            [IO.Path]::GetRelativePath($DistDir, $_.FullName)
+        }
+    Push-Location $DistDir
+    try {
+        $LoaderCacheContent = & ".\gdk-pixbuf-query-loaders.exe" `
+            @RelativeLoaderFiles
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not generate the bundled Pixbuf loader cache"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+    [IO.File]::WriteAllLines(
+        $LoaderCache,
+        [string[]]$LoaderCacheContent,
+        [Text.UTF8Encoding]::new($false)
+    )
+
     foreach ($RelativePath in @(
         "share\glib-2.0\schemas",
         "share\gtksourceview-3.0",
