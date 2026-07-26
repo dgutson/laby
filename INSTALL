@@ -34,5 +34,6 @@ Windows:
   The build script pins a locally patched lablgtk3 3.1.5 because that
   release uses Unix-sized serializer types that do not compile on Win64.
 
-  See README.md for details. The launcher runs through "opam exec" so
-  the GTK3 and GtkSourceView3 runtime DLLs are available on PATH.
+  See README.md for details. The complete dist\windows directory includes
+  the GTK3, Cairo and GtkSourceView3 runtime and can be copied to another
+  64-bit Windows machine.
