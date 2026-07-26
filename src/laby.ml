@@ -40,9 +40,21 @@ let configure_windows_runtime () =
       if not (Sys.file_exists cache_root) then
         (try Unix.mkdir cache_root 0o755 with Unix.Unix_error _ -> ());
       let cache = Filename.concat cache_root "loaders.cache" in
-      let command = Printf.sprintf "\"%s\" > \"%s\"" query cache in
-      if Sys.command command = 0 && Sys.file_exists cache then
-        Unix.putenv "GDK_PIXBUF_MODULE_FILE" cache
+      (try
+         let output =
+           Unix.openfile cache
+             [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o644
+         in
+         let pid =
+           Unix.create_process query [|query|]
+             Unix.stdin output Unix.stderr
+         in
+         Unix.close output;
+         match Unix.waitpid [] pid with
+         | _, Unix.WEXITED 0 when Sys.file_exists cache ->
+             Unix.putenv "GDK_PIXBUF_MODULE_FILE" cache
+         | _ -> ()
+       with Unix.Unix_error _ -> ())
     end
   end
 
